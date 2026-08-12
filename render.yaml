@@ -21,7 +21,3 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
-    disk:
-      name: beyond-reality-data
-      mountPath: /opt/render/project/src/server/data
-      sizeGB: 1

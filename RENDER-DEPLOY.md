@@ -44,7 +44,8 @@ Set these under your service → **Environment**:
 
 ## Notes
 
-- **Persistent disk** (1 GB) keeps SQLite database across restarts (`render.yaml` configures this).
+- **Free tier** has no persistent disk — the SQLite database resets when Render redeploys or restarts. Re-import your Excel file after each deploy via **Excel Import → Replace ALL**.
+- To keep data permanently, upgrade to a **paid Render plan** and add a persistent disk in `render.yaml`.
 - **Free tier** spins down after inactivity — first visit may take 30–60 seconds to wake up.
 - Finance login: `finance` / `finance123`
 - Client login: first name or surname + stand number
