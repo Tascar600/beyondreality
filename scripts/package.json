@@ -1,0 +1,12 @@
+{
+  "name": "beyond-reality-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "import": "node run-full-import.js",
+    "import:merge": "node import-excel.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

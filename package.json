@@ -1,0 +1,15 @@
+{
+  "name": "beyond-reality-housing-portal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install && npm --prefix scripts install",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "start:prod": "npm run build && npm --prefix server start",
+    "dev:api": "npm --prefix server start",
+    "dev:client": "npm --prefix client run dev",
+    "import": "npm --prefix scripts run import",
+    "import:all": "npm --prefix scripts run import"
+  }
+}
