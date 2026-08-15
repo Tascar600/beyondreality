@@ -30,11 +30,12 @@ function RequireFinance({ children }) {
   return children;
 }
 
-function RequireStaff({ children }) {
+function RequireCashier({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="page-center">Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'client') return <Navigate to="/my" replace />;
+  if (user.role !== 'cashier') return <Navigate to="/dashboard" replace />;
   return children;
 }
 
@@ -60,7 +61,7 @@ export default function App() {
               <Route path="payments" element={<RequireFinance><Payments /></RequireFinance>} />
               <Route path="import" element={<RequireFinance><ImportPage /></RequireFinance>} />
               <Route path="reports" element={<RequireFinance><Reports /></RequireFinance>} />
-              <Route path="bursary" element={<RequireStaff><Bursary /></RequireStaff>} />
+              <Route path="bursary" element={<RequireCashier><Bursary /></RequireCashier>} />
               <Route path="my" element={<ClientHome />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

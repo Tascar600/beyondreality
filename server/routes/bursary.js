@@ -29,11 +29,11 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-router.get('/bursary/offices', authRequired, rolesAllowed('cashier', 'finance', 'admin'), (req, res) => {
+router.get('/bursary/offices', authRequired, rolesAllowed('cashier'), (req, res) => {
   res.json({ offices: OFFICES });
 });
 
-router.get('/bursary/search', authRequired, rolesAllowed('cashier', 'finance', 'admin'), (req, res) => {
+router.get('/bursary/search', authRequired, rolesAllowed('cashier'), (req, res) => {
   const q = String(req.query.q || '').trim();
   const limit = Math.min(30, parseInt(req.query.limit, 10) || 20);
   if (!q) return res.json({ q: '', clients: [] });
@@ -46,7 +46,7 @@ router.get('/bursary/search', authRequired, rolesAllowed('cashier', 'finance', '
   res.json({ q, clients: rows });
 });
 
-router.get('/bursary/clients/:id', authRequired, rolesAllowed('cashier', 'finance', 'admin'), (req, res) => {
+router.get('/bursary/clients/:id', authRequired, rolesAllowed('cashier'), (req, res) => {
   const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(Number(req.params.id));
   if (!client) return res.status(404).json({ error: 'Client not found' });
   const summary = clientSummary(client);
@@ -59,7 +59,7 @@ router.get('/bursary/clients/:id', authRequired, rolesAllowed('cashier', 'financ
   });
 });
 
-router.post('/bursary/clients/:id/payments', authRequired, rolesAllowed('cashier', 'finance', 'admin'), (req, res) => {
+router.post('/bursary/clients/:id/payments', authRequired, rolesAllowed('cashier'), (req, res) => {
   const client = db.prepare('SELECT id FROM clients WHERE id = ?').get(Number(req.params.id));
   if (!client) return res.status(404).json({ error: 'Client not found' });
 
@@ -101,7 +101,7 @@ router.post('/bursary/clients/:id/payments', authRequired, rolesAllowed('cashier
   });
 });
 
-router.get('/bursary/reconciliation', authRequired, rolesAllowed('cashier', 'finance', 'admin'), (req, res) => {
+router.get('/bursary/reconciliation', authRequired, rolesAllowed('cashier'), (req, res) => {
   const date = req.query.date && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date) ? req.query.date : todayStr();
   const rows = db.prepare(`
     SELECT p.id, p.payment_date, p.amount, p.receipt_no, p.cash_reco_no, p.office, p.created_at,

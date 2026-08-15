@@ -25,7 +25,6 @@ export default function Layout() {
           { to: '/payments', label: 'Monthly Payments' },
           { to: '/import', label: 'Excel Import' },
           { to: '/reports', label: 'Reports' },
-          { to: '/bursary', label: 'Cash Office (Bursary)' },
         ];
 
   return (

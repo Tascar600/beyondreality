@@ -94,7 +94,7 @@ router.delete('/clients/:id', authRequired, rolesAllowed('finance', 'admin'), (r
   res.json({ ok: true });
 });
 
-router.post('/clients/:id/payments', authRequired, rolesAllowed('finance', 'admin', 'cashier'), (req, res) => {
+router.post('/clients/:id/payments', authRequired, rolesAllowed('finance', 'admin'), (req, res) => {
   const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(Number(req.params.id));
   if (!client) return res.status(404).json({ error: 'Client not found' });
   const { amount, month_label, payment_date, receipt_no, cash_reco_no, office } = req.body || {};
