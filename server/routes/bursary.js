@@ -54,7 +54,7 @@ router.get('/bursary/clients/:id', authRequired, rolesAllowed('cashier'), (req, 
     ...publicAccount(summary),
     payments: summary.payments.map((p) => ({
       id: p.id, amount: p.amount, payment_date: p.payment_date, month_label: p.month_label,
-      receipt_no: p.receipt_no, cash_reco_no: p.cash_reco_no, office: p.office || 'Harare',
+      receipt_no: p.receipt_no, cash_reco_no: p.cash_reco_no, office: p.office || 'Harare', created_at: p.created_at,
     })),
   });
 });
@@ -99,6 +99,27 @@ router.post('/bursary/clients/:id/payments', authRequired, rolesAllowed('cashier
     payment: { ...payment, client_name: summary.name, stand_no: summary.stand_no, location: summary.location },
     client: publicAccount(summary),
   });
+});
+
+router.get('/bursary/next-receipt', authRequired, rolesAllowed('cashier'), (req, res) => {
+  const OFFICE_SHORT = { Harare: 'H', Norton: 'N', 'Head Office Kadoma': 'K' };
+  let nextNum = 1000;
+  for (const row of db.prepare("SELECT receipt_no FROM payments WHERE receipt_no LIKE 'BR-%'").all()) {
+    const m = /^BR-(\d{4})-(\d+)$/.exec(String(row.receipt_no || ''));
+    if (m) nextNum = Math.max(nextNum, Number(m[2]));
+  }
+  const today = todayStr();
+  const counts = {};
+  for (const row of db.prepare(
+    "SELECT office, COUNT(*) c FROM payments WHERE cash_reco_no LIKE ? GROUP BY office"
+  ).all(`CR-${today.replace(/-/g, '').slice(2)}-%`)) {
+    counts[row.office || 'Harare'] = row.c;
+  }
+  const cashRecoNo = {};
+  for (const o of OFFICES) {
+    cashRecoNo[o] = `CR-${today.replace(/-/g, '').slice(2)}-${OFFICE_SHORT[o]}-${(counts[o] || 0) + 1}`;
+  }
+  res.json({ receipt_no: `BR-${today.slice(0, 4)}-${nextNum + 1}`, cash_reco_no: cashRecoNo });
 });
 
 router.get('/bursary/reconciliation', authRequired, rolesAllowed('cashier'), (req, res) => {

@@ -23,7 +23,7 @@ function maxPaymentDate(payments, fallback) {
 
 function clientSummary(client) {
   const payments = db.prepare(
-    'SELECT id, amount, payment_date, receipt_no, cash_reco_no, month_label, office FROM payments WHERE client_id = ? ORDER BY payment_date, id'
+    'SELECT id, amount, payment_date, receipt_no, cash_reco_no, month_label, office, created_at FROM payments WHERE client_id = ? ORDER BY payment_date, id'
   ).all(client.id);
   const monthlySum = round2(payments.reduce((s, p) => s + (p.amount || 0), 0));
   const totalPaid = round2((client.balance_brought_down || 0) + monthlySum);

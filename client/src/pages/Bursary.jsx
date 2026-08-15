@@ -27,10 +27,32 @@ export default function Bursary() {
   const [saving, setSaving] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [lastReceipt, setLastReceipt] = useState(null);
+  const [takings, setTakings] = useState(null);
+  const [nextRec, setNextRec] = useState(null);
   const [recDate, setRecDate] = useState(todayStr());
   const [recon, setRecon] = useState(null);
   const [loadingRecon, setLoadingRecon] = useState(false);
   const resultsRef = useRef(null);
+
+  const loadTakings = async () => {
+    try {
+      const r = await api(`/bursary/reconciliation?date=${todayStr()}`);
+      setTakings(r);
+    } catch { /* non-fatal */ }
+  };
+
+  const loadNextRec = async (office) => {
+    try {
+      const r = await api('/bursary/next-receipt');
+      setNextRec(r);
+      setForm((f) => {
+        const nf = { ...f };
+        if (!nf.receipt_no) nf.receipt_no = r.receipt_no;
+        if (!nf.cash_reco_no) nf.cash_reco_no = (r.cash_reco_no || {})[office || f.office] || '';
+        return nf;
+      });
+    } catch { /* non-fatal */ }
+  };
 
   const search = async (e) => {
     if (e) e.preventDefault();
@@ -52,6 +74,8 @@ export default function Bursary() {
       setAccount(a);
       setResults(null);
       setQ('');
+      setForm((f) => ({ ...f, amount: '', receipt_no: '', cash_reco_no: '' }));
+      loadNextRec(user?.office || 'Harare');
       if (resultsRef.current) resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (ex) { setErr(ex.message); }
   };
@@ -74,6 +98,8 @@ export default function Bursary() {
       setLastReceipt(r.payment);
       setOk(`Payment of ${money(r.payment.amount)} recorded — account, ledger and reconciliation updated.`);
       setForm((f) => ({ ...f, amount: '', receipt_no: '', cash_reco_no: '' }));
+      loadTakings();
+      loadNextRec(fresh.office || r.payment.office);
     } catch (ex) { setErr(ex.message); }
     finally { setSaving(false); }
   };
@@ -89,9 +115,28 @@ export default function Bursary() {
   };
 
   useEffect(() => {
+    if (tab === 'pay') loadTakings();
     if (tab === 'recon') loadRecon(recDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  const printPayment = (p) => setReceipt({
+    ...p,
+    client_name: account.name,
+    stand_no: account.stand_no,
+    location: account.location,
+  });
+
+  const onOfficeChange = (office) => {
+    setForm((f) => {
+      const nf = { ...f, office };
+      if (nextRec && nextRec.cash_reco_no) {
+        const prev = (nextRec.cash_reco_no || {})[f.office];
+        if (!nf.cash_reco_no || nf.cash_reco_no === prev) nf.cash_reco_no = nextRec.cash_reco_no[office] || '';
+      }
+      return nf;
+    });
+  };
 
   const moneyInput = (v) => money(Number(v) || 0);
 
@@ -112,6 +157,28 @@ export default function Bursary() {
 
       {tab === 'pay' && (
         <div className="stack">
+          {takings && (
+            <section className="card no-print">
+              <h2>Today's takings — {niceDate(takings.date)}</h2>
+              {takings.grandCount === 0 ? (
+                <p className="hint">No receipts recorded today yet. Record the first payment to start today's cash reconciliation.</p>
+              ) : (
+                <div className="stats-grid">
+                  {takings.totals.map((t) => (
+                    <div key={t.office} className="stat">
+                      <div className="stat-value">{money(t.amount)}</div>
+                      <div className="stat-label">{t.office} — {t.count} {t.count === 1 ? 'receipt' : 'receipts'}</div>
+                    </div>
+                  ))}
+                  <div className="stat blue">
+                    <div className="stat-value">{money(takings.grandTotal)}</div>
+                    <div className="stat-label">TOTAL — {takings.grandCount} {takings.grandCount === 1 ? 'receipt' : 'receipts'}</div>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           <section className="card" ref={resultsRef}>
             <h2>{account ? 'Search another client' : 'Find client'}</h2>
             <form className="row-form" onSubmit={search}>
@@ -184,7 +251,7 @@ export default function Bursary() {
                   </div>
                   <div className="field">
                     <label>Office where payment was made *</label>
-                    <select value={form.office} onChange={(e) => setForm({ ...form, office: e.target.value })}>
+                    <select value={form.office} onChange={(e) => onOfficeChange(e.target.value)}>
                       {OFFICES.map((o) => <option key={o} value={o}>{o}</option>)}
                     </select>
                   </div>
@@ -203,9 +270,9 @@ export default function Bursary() {
               <section className="card">
                 <h2>Payment history</h2>
                 <table className="table">
-                  <thead><tr><th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th>Office</th><th>Date Paid</th></tr></thead>
+                  <thead><tr><th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th>Office</th><th>Date Paid</th><th></th></tr></thead>
                   <tbody>
-                    {account.payments.length === 0 && <tr><td colSpan="6" className="hint">No payments recorded yet.</td></tr>}
+                    {account.payments.length === 0 && <tr><td colSpan="7" className="hint">No payments recorded yet.</td></tr>}
                     {account.payments.map((p) => (
                       <tr key={p.id}>
                         <td>{monthLabel(p.month_label)}</td>
@@ -214,10 +281,16 @@ export default function Bursary() {
                         <td>{p.cash_reco_no || '—'}</td>
                         <td>{p.office}</td>
                         <td>{niceDate(p.payment_date)}</td>
+                        <td>
+                          {p.receipt_no && (
+                            <button className="btn btn-sm no-print" onClick={() => printPayment(p)} title="Re-print this receipt">Print</button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                <p className="hint">Click "Print" on any row to re-print that receipt.</p>
               </section>
             </>
           )}
