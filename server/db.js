@@ -7,6 +7,33 @@ const UPLOAD_DIR = path.join(__dirname, 'uploads');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+const SEED_DIR = path.join(__dirname, 'seed-data');
+const SEED_DB = path.join(SEED_DIR, 'portal.db');
+
+function restoreSeed() {
+  if (!fs.existsSync(SEED_DB)) return;
+  const dataFile = path.join(DATA_DIR, 'portal.db');
+  const isEmpty = !fs.existsSync(dataFile) || fs.statSync(dataFile).size === 0;
+  if (!isEmpty) {
+    try {
+      const probe = new DatabaseSync(dataFile);
+      const n = probe.prepare('SELECT COUNT(*) AS c FROM clients').get().c;
+      probe.close();
+      if (n > 0) return;
+    } catch { return; }
+  }
+  fs.copyFileSync(SEED_DB, dataFile);
+  const seedUploads = path.join(SEED_DIR, 'uploads');
+  if (fs.existsSync(seedUploads) && fs.readdirSync(UPLOAD_DIR).length === 0) {
+    for (const f of fs.readdirSync(seedUploads)) {
+      fs.copyFileSync(path.join(seedUploads, f), path.join(UPLOAD_DIR, f));
+    }
+  }
+  console.log('[seed] restored populated database');
+}
+
+restoreSeed();
+
 const db = new DatabaseSync(path.join(DATA_DIR, 'portal.db'));
 
 db.exec(`
