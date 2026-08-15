@@ -79,6 +79,8 @@ router.get('/dashboard/client', authRequired, rolesAllowed('client', 'finance', 
       outstanding,
     },
     payments,
+    uploads: db.prepare('SELECT * FROM uploads WHERE client_id = ? ORDER BY uploaded_at DESC').all(client.id),
+    notifications: db.prepare('SELECT * FROM notifications WHERE client_id = ? ORDER BY created_at DESC LIMIT 20').all(client.id),
   });
 });
 

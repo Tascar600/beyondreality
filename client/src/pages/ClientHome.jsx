@@ -17,7 +17,7 @@ export default function ClientHome() {
   if (err) return <div className="alert alert-err">{err}</div>;
   if (!data) return <div className="page-center">Loading…</div>;
 
-  const { client, payments } = data;
+  const { client, payments, uploads, notifications } = data;
   let running = client.balance_brought_down || 0;
 
   return (
@@ -88,6 +88,35 @@ export default function ClientHome() {
           </tbody>
         </table>
       </section>
+
+      {uploads?.length > 0 && (
+        <section className="card" id="print-uploads">
+          <h2>My Documents</h2>
+          <table className="table">
+            <thead><tr><th>Type</th><th>File</th><th>Uploaded</th></tr></thead>
+            <tbody>
+              {uploads.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.kind}</td>
+                  <td><a href={`/uploads/${u.filename}`} target="_blank" rel="noreferrer">{u.original_name}</a></td>
+                  <td>{niceDate(u.uploaded_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {notifications?.length > 0 && (
+        <section className="card" id="print-notifications">
+          <h2>Notifications</h2>
+          <ul className="notice-list">
+            {notifications.map((n) => (
+              <li key={n.id}><strong>{n.channel} · {niceDate(n.created_at)}</strong><br />{n.message}</li>
+            ))}
+          </ul>
+        </section>
+      )}
       </div>
     </div>
   );
