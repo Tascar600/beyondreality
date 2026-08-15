@@ -43,6 +43,7 @@ export default function AdminDashboard() {
           <Link to="/payments" className="btn">Monthly Payments</Link>
           <Link to="/import" className="btn">Excel Import</Link>
           <Link to="/reports" className="btn">Reports</Link>
+          <button type="button" className="btn no-print" onClick={() => window.print()}>Print dashboard</button>
           <button
             type="button"
             className="btn btn-primary"
@@ -60,6 +61,11 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      <div id="print-dashboard">
+        <div className="print-header">
+          <div className="ph-title">BEYOND REALITY HOUSING SCHEME</div>
+          <div className="ph-sub">Finance Dashboard — {location}</div>
+        </div>
       <div className="stats-grid">
         <Stat label="Stands Sold" value={data.standsSold.toLocaleString()} tone="green" />
         <Stat label="Total Payments Received" value={money(data.paymentsReceived)} tone="blue" />
@@ -127,7 +133,7 @@ export default function AdminDashboard() {
         <h2>Recent Payments</h2>
         <table className="table">
           <thead>
-            <tr><th>Client</th><th>Stand</th><th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th>Date</th></tr>
+            <tr><th>Client</th><th>Stand</th><th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th>Office</th><th>Date</th></tr>
           </thead>
           <tbody>
             {data.recent.map((p) => (
@@ -138,12 +144,14 @@ export default function AdminDashboard() {
                 <td className="num">{money(p.amount)}</td>
                 <td>{p.receipt_no || '—'}</td>
                 <td>{p.cash_reco_no || '—'}</td>
+                <td>{p.office || '—'}</td>
                 <td>{niceDate(p.payment_date)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
+      </div>
     </div>
   );
 }

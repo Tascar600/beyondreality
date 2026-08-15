@@ -108,8 +108,8 @@ function clearAllData() {
   `);
 }
 
-function upsertClient(c, index) {
-  const existing = findInIndex(c, index);
+function upsertClient(c, index, alwaysInsert = false) {
+  const existing = alwaysInsert ? null : findInIndex(c, index);
   const purPrice = c.stand_size ? round2(c.stand_size * 22.5) : null;
 
   if (existing) {
@@ -294,7 +294,7 @@ function importWorkbookBuffer(buffer, options = {}) {
       const c = parseRow(raw, map, defaultLocation);
       if (!c) { skipped++; continue; }
 
-      const { id: clientId, created: isNew } = upsertClient(c, index);
+      const { id: clientId, created: isNew } = upsertClient(c, index, Boolean(options.replaceAll));
       if (isNew) created++;
       else updated++;
       imported++;

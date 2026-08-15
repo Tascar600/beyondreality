@@ -72,13 +72,18 @@ export default function Payments() {
           </select>
           <input placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} />
           <button className="btn btn-primary" disabled={busy} onClick={saveAll}>Save payments</button>
+          <button type="button" className="btn no-print" onClick={() => window.print()}>Print</button>
         </div>
       </div>
 
       {msg && <div className="alert alert-ok">{msg}</div>}
 
-      <section className="card">
-        <p className="hint">Enter July (or any month) payments in bulk. Sort by stand, surname, or name to match your Excel sheet order.</p>
+      <section className="card" id="print-monthly">
+        <div className="print-header">
+          <div className="ph-title">BEYOND REALITY HOUSING SCHEME</div>
+          <div className="ph-sub">Monthly Payments Register — {monthLabel(month)} · {location}</div>
+        </div>
+        <p className="hint no-print">Enter July (or any month) payments in bulk. Sort by stand, surname, or name to match your Excel sheet order.</p>
         <table className="table">
           <thead>
             <tr>

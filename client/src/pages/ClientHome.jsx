@@ -24,10 +24,18 @@ export default function ClientHome() {
     <div>
       <div className="page-head">
         <h1>My Stand · {client.name}</h1>
-        <Link to={`/clients/${user.client_id}`} className="btn">View full record</Link>
+        <div className="toolbar">
+          <Link to={`/clients/${user.client_id}`} className="btn">View full record</Link>
+          <button className="btn no-print" onClick={() => window.print()}>Print my statement</button>
+        </div>
       </div>
 
-      <div className="stats-grid">
+      <div id="print-statement">
+        <div className="print-header">
+          <div className="ph-title">BEYOND REALITY HOUSING SCHEME</div>
+          <div className="ph-sub">Account Statement — {client.name} · Stand {client.stand_no || '—'} · {client.location || '—'}</div>
+        </div>
+        <div className="stats-grid">
         <div className="stat green"><div className="stat-value">{client.location || '—'}</div><div className="stat-label">Location</div></div>
         <div className="stat"><div className="stat-value">{client.stand_no || '—'}</div><div className="stat-label">Stand No</div></div>
         <div className="stat blue"><div className="stat-value">{money(client.balance_brought_down)}</div><div className="stat-label">Balance Brought Down</div></div>
@@ -48,13 +56,13 @@ export default function ClientHome() {
         <h2>My Payment History</h2>
         <table className="table">
           <thead>
-            <tr><th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th className="num">Running Total</th><th>Date Paid</th></tr>
+            <tr><th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th>Office</th><th className="num">Running Total</th><th>Date Paid</th></tr>
           </thead>
           <tbody>
             <tr className="bd-row">
               <td>Balance brought down</td>
               <td className="num">{money(client.balance_brought_down)}</td>
-              <td>—</td><td>—</td>
+              <td>—</td><td>—</td><td>—</td>
               <td className="num">{money(client.balance_brought_down)}</td>
               <td>—</td>
             </tr>
@@ -66,6 +74,7 @@ export default function ClientHome() {
                   <td className="num">{money(p.amount)}</td>
                   <td>{p.receipt_no || '—'}</td>
                   <td>{p.cash_reco_no || '—'}</td>
+                  <td>{p.office || '—'}</td>
                   <td className="num">{money(running)}</td>
                   <td>{niceDate(p.payment_date)}</td>
                 </tr>
@@ -74,11 +83,12 @@ export default function ClientHome() {
             <tr className="total-row">
               <td>Total paid (incl B/D)</td>
               <td className="num">{money(client.totalPaid)}</td>
-              <td colSpan={4}></td>
+              <td colSpan={5}></td>
             </tr>
           </tbody>
         </table>
       </section>
+      </div>
     </div>
   );
 }

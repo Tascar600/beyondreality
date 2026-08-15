@@ -26,6 +26,7 @@ export default function Bursary() {
   const [ok, setOk] = useState('');
   const [saving, setSaving] = useState(false);
   const [receipt, setReceipt] = useState(null);
+  const [lastReceipt, setLastReceipt] = useState(null);
   const [recDate, setRecDate] = useState(todayStr());
   const [recon, setRecon] = useState(null);
   const [loadingRecon, setLoadingRecon] = useState(false);
@@ -68,9 +69,10 @@ export default function Bursary() {
         method: 'POST',
         body: JSON.stringify({ ...form, amount: Number(form.amount) }),
       });
-      setAccount(r.client);
-      setReceipt(r.payment);
-      setOk('Payment recorded — account updated.');
+      const fresh = await api(`/bursary/clients/${account.id}`);
+      setAccount(fresh);
+      setLastReceipt(r.payment);
+      setOk(`Payment of ${money(r.payment.amount)} recorded — account, ledger and reconciliation updated.`);
       setForm((f) => ({ ...f, amount: '', receipt_no: '', cash_reco_no: '' }));
     } catch (ex) { setErr(ex.message); }
     finally { setSaving(false); }
@@ -190,9 +192,12 @@ export default function Bursary() {
                     <label>Applies to month</label>
                     <input type="month" value={form.month_label} onChange={(e) => setForm({ ...form, month_label: e.target.value })} />
                   </div>
-                  <button className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Record & print receipt'}</button>
+                  <div className="field row-form">
+                    <button className="btn btn-primary" disabled={saving}>{saving ? 'Recording…' : 'Record payment'}</button>
+                    <button type="button" className="btn" disabled={!lastReceipt} onClick={() => setReceipt(lastReceipt)}>Print receipt</button>
+                  </div>
                 </form>
-                <p className="hint">Saving updates the client's account immediately (total paid, outstanding balance and ledger).</p>
+                <p className="hint">Recording updates the client's account immediately (total paid, outstanding balance and ledger). Click "Print receipt" to print the receipt for the last recorded payment.</p>
               </section>
 
               <section className="card">

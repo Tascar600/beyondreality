@@ -100,6 +100,7 @@ export default function ClientDetail() {
         <div className="toolbar">
           {canEdit && <Link to="/clients" className="btn">Back to clients</Link>}
           {canEdit && c.email && <button className="btn btn-primary" onClick={sendReminder}>Send email reminder</button>}
+          <button className="btn no-print" onClick={() => window.print()}>Print statement</button>
         </div>
       </div>
 
@@ -222,7 +223,11 @@ export default function ClientDetail() {
         </div>
       </div>
 
-      <section className="card">
+      <section className="card" id="print-statement">
+        <div className="print-header">
+          <div className="ph-title">BEYOND REALITY HOUSING SCHEME</div>
+          <div className="ph-sub">Account Statement — {c.name} · Stand {c.stand_no || '—'} · {c.location || '—'}</div>
+        </div>
         <h2>Payment Ledger</h2>
         <table className="table">
           <thead>

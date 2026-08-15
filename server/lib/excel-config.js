@@ -108,7 +108,10 @@ function buildHeaderMap(headerRow) {
     const upAmt = amtHeader.toUpperCase();
     if (upAmt === 'TOTAL') break;
 
-    const ym = resolveMonthHeader(amtHeader);
+    let ym = resolveMonthHeader(amtHeader);
+    if (!ym && LEGACY_MONTH_BY_COL_INDEX[col]) {
+      ym = LEGACY_MONTH_BY_COL_INDEX[col];
+    }
     if (!ym) break;
 
     const nextHeader = String(headerRow[col + 1] || '').trim().toUpperCase();
