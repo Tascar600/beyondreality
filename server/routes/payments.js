@@ -15,9 +15,16 @@ router.get('/payments/monthly', authRequired, rolesAllowed('finance', 'admin'), 
   let clients = db.prepare('SELECT * FROM clients ORDER BY name COLLATE NOCASE').all();
   if (location) clients = clients.filter((c) => c.location === location);
   const summaries = sortClients(clients.map(clientSummary), sortBy);
-  const pays = db.prepare('SELECT * FROM payments WHERE month_label = ?').all(month);
+  const pays = db.prepare('SELECT * FROM payments WHERE month_label = ? ORDER BY payment_date, id').all(month);
   const byClient = {};
-  pays.forEach((p) => { byClient[p.client_id] = p; });
+  pays.forEach((p) => {
+    if (!byClient[p.client_id]) byClient[p.client_id] = { ...p, amount: 0, receipt_no: '', cash_reco_no: '' };
+    const agg = byClient[p.client_id];
+    agg.amount = round2(agg.amount + (p.amount || 0));
+    if (p.receipt_no) agg.receipt_no = agg.receipt_no ? `${agg.receipt_no}, ${p.receipt_no}` : p.receipt_no;
+    if (p.cash_reco_no) agg.cash_reco_no = agg.cash_reco_no ? `${agg.cash_reco_no}, ${p.cash_reco_no}` : p.cash_reco_no;
+    agg.offices = [...new Set([...(agg.offices || []), p.office || 'Harare'])].join(', ');
+  });
 
   res.json({
     month,

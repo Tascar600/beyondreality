@@ -45,8 +45,9 @@ db.exec(`
     name TEXT NOT NULL,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('admin','finance','client')),
-    client_id INTEGER REFERENCES clients(id)
+    role TEXT NOT NULL CHECK (role IN ('admin','finance','client','cashier')),
+    client_id INTEGER REFERENCES clients(id),
+    office TEXT DEFAULT ''
   );
 
   CREATE TABLE IF NOT EXISTS clients (
@@ -80,6 +81,7 @@ db.exec(`
     amount REAL NOT NULL,
     receipt_no TEXT,
     cash_reco_no TEXT,
+    office TEXT NOT NULL DEFAULT 'Harare',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE INDEX IF NOT EXISTS idx_payments_client ON payments(client_id);
@@ -122,6 +124,27 @@ db.exec(`
 try { db.exec('ALTER TABLE clients ADD COLUMN password_hash TEXT DEFAULT \'\''); } catch {}
 try { db.exec("ALTER TABLE clients ADD COLUMN location TEXT NOT NULL DEFAULT 'Harare'"); } catch {}
 try { db.exec("UPDATE clients SET location = 'Harare' WHERE location IS NULL OR location = ''"); } catch {}
+
+try { db.exec("ALTER TABLE payments ADD COLUMN office TEXT NOT NULL DEFAULT 'Harare'"); } catch {}
+
+const userCols = db.prepare('PRAGMA table_info(users)').all();
+if (!userCols.some((c) => c.name === 'office')) {
+  db.exec(`
+    CREATE TABLE users_v2 (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('admin','finance','client','cashier')),
+      client_id INTEGER REFERENCES clients(id),
+      office TEXT DEFAULT ''
+    );
+    INSERT INTO users_v2 (id, name, username, password_hash, role, client_id, office)
+      SELECT id, name, username, password_hash, role, client_id, '' FROM users;
+    DROP TABLE users;
+    ALTER TABLE users_v2 RENAME TO users;
+  `);
+}
 
 function parseMoney(v) {
   if (v === null || v === undefined) return 0;

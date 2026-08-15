@@ -94,28 +94,29 @@ router.delete('/clients/:id', authRequired, rolesAllowed('finance', 'admin'), (r
   res.json({ ok: true });
 });
 
-router.post('/clients/:id/payments', authRequired, rolesAllowed('finance', 'admin'), (req, res) => {
+router.post('/clients/:id/payments', authRequired, rolesAllowed('finance', 'admin', 'cashier'), (req, res) => {
   const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(Number(req.params.id));
   if (!client) return res.status(404).json({ error: 'Client not found' });
-  const { amount, month_label, payment_date, receipt_no, cash_reco_no } = req.body || {};
+  const { amount, month_label, payment_date, receipt_no, cash_reco_no, office } = req.body || {};
   const amt = Number(amount);
   if (!amt || amt <= 0) return res.status(400).json({ error: 'Amount must be greater than zero' });
   if (!month_label) return res.status(400).json({ error: 'Payment month is required' });
 
   const receipt = String(receipt_no || '').trim() || `R-${client.id}-${month_label}`;
   const cash = String(cash_reco_no || '').trim() || `CR-${client.id}-${month_label}`;
+  const off = String(office || '').trim() || (req.user.role === 'cashier' ? req.user.office || '' : '') || 'Harare';
   const date = payment_date && /^\d{4}-\d{2}-\d{2}/.test(payment_date) ? payment_date.slice(0, 10) : `${month_label}-28`;
 
   const existingMonth = db.prepare('SELECT id, receipt_no FROM payments WHERE client_id = ? AND month_label = ?').get(client.id, month_label);
   if (existingMonth) {
-    db.prepare('UPDATE payments SET amount = ?, payment_date = ?, receipt_no = ?, cash_reco_no = ? WHERE id = ?')
-      .run(round2(amt), date, receipt, cash, existingMonth.id);
+    db.prepare('UPDATE payments SET amount = ?, payment_date = ?, receipt_no = ?, cash_reco_no = ?, office = ? WHERE id = ?')
+      .run(round2(amt), date, receipt, cash, off, existingMonth.id);
   } else {
     const dup = db.prepare('SELECT id FROM payments WHERE receipt_no = ?').get(receipt);
     if (dup) return res.status(409).json({ error: `Receipt number ${receipt} already used (payment #${dup.id})` });
     db.prepare(
-      'INSERT INTO payments (client_id, payment_date, month_label, amount, receipt_no, cash_reco_no) VALUES (?,?,?,?,?,?)'
-    ).run(client.id, date, month_label, round2(amt), receipt, cash);
+      'INSERT INTO payments (client_id, payment_date, month_label, amount, receipt_no, cash_reco_no, office) VALUES (?,?,?,?,?,?,?)'
+    ).run(client.id, date, month_label, round2(amt), receipt, cash, off);
   }
 
   const lastDate = db.prepare('SELECT MAX(payment_date) AS d FROM payments WHERE client_id = ?').get(client.id).d;

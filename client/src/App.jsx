@@ -11,6 +11,7 @@ import Reports from './pages/Reports';
 import ClientHome from './pages/ClientHome';
 import Payments from './pages/Payments';
 import ImportPage from './pages/ImportPage';
+import Bursary from './pages/Bursary';
 import Layout from './components/Layout';
 
 function RequireAuth({ children }) {
@@ -25,12 +26,22 @@ function RequireFinance({ children }) {
   if (loading) return <div className="page-center">Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'client') return <Navigate to="/my" replace />;
+  if (user.role === 'cashier') return <Navigate to="/bursary" replace />;
+  return children;
+}
+
+function RequireStaff({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="page-center">Loading…</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'client') return <Navigate to="/my" replace />;
   return children;
 }
 
 function Home() {
   const { user } = useAuth();
   if (user.role === 'client') return <Navigate to="/my" replace />;
+  if (user.role === 'cashier') return <Navigate to="/bursary" replace />;
   return <Navigate to="/dashboard" replace />;
 }
 
@@ -49,6 +60,7 @@ export default function App() {
               <Route path="payments" element={<RequireFinance><Payments /></RequireFinance>} />
               <Route path="import" element={<RequireFinance><ImportPage /></RequireFinance>} />
               <Route path="reports" element={<RequireFinance><Reports /></RequireFinance>} />
+              <Route path="bursary" element={<RequireStaff><Bursary /></RequireStaff>} />
               <Route path="my" element={<ClientHome />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

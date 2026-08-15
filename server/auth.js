@@ -57,4 +57,13 @@ function seedUsers() {
   }
 }
 
-module.exports = { hashPassword, verifyPassword, signToken, authRequired, rolesAllowed, seedUsers, JWT_SECRET, findClientByLogin };
+function seedCashier() {
+  const exists = db.prepare("SELECT id FROM users WHERE username = 'cashier'").get();
+  if (!exists) {
+    db.prepare("INSERT INTO users (name, username, password_hash, role, office) VALUES (?,?,?,?,?)")
+      .run('Cash Officer', 'cashier', hashPassword('cashier123'), 'cashier', 'Harare');
+    console.log('[seed] cashier user: cashier / cashier123 (Harare)');
+  }
+}
+
+module.exports = { hashPassword, verifyPassword, signToken, authRequired, rolesAllowed, seedUsers, seedCashier, JWT_SECRET, findClientByLogin };

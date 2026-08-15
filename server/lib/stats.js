@@ -23,7 +23,7 @@ function maxPaymentDate(payments, fallback) {
 
 function clientSummary(client) {
   const payments = db.prepare(
-    'SELECT id, amount, payment_date, receipt_no, cash_reco_no, month_label FROM payments WHERE client_id = ? ORDER BY payment_date, id'
+    'SELECT id, amount, payment_date, receipt_no, cash_reco_no, month_label, office FROM payments WHERE client_id = ? ORDER BY payment_date, id'
   ).all(client.id);
   const monthlySum = round2(payments.reduce((s, p) => s + (p.amount || 0), 0));
   const totalPaid = round2((client.balance_brought_down || 0) + monthlySum);
@@ -54,7 +54,7 @@ function allClientSummariesForExport(location) {
   const locSql = filterAll ? '' : ' AND c.location = ?';
   const payParams = filterAll ? [] : [loc];
   const allPayments = db.prepare(`
-    SELECT p.id, p.client_id, p.amount, p.payment_date, p.receipt_no, p.cash_reco_no, p.month_label
+    SELECT p.id, p.client_id, p.amount, p.payment_date, p.receipt_no, p.cash_reco_no, p.month_label, p.office
     FROM payments p JOIN clients c ON c.id = p.client_id
     WHERE 1=1${locSql}
     ORDER BY p.client_id, p.payment_date, p.id

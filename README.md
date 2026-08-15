@@ -27,6 +27,7 @@ Open http://localhost:5180
 |---|---|---|
 | Administrator | `admin` | `admin123` |
 | Finance | `finance` | `finance123` |
+| Cashier (Bursary) | `cashier` | `cashier123` |
 | Client | `client` | `client123` |
 
 The `client` account is linked to the first imported client (currently **ABIGAIL ZHANJE**). Change the link in SQL:

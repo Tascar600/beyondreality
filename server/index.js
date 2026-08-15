@@ -7,7 +7,7 @@ const multer = require('multer');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const { db, UPLOAD_DIR } = require('./db');
-const { authRequired, rolesAllowed, verifyPassword, signToken, seedUsers, findClientByLogin } = require('./auth');
+const { authRequired, rolesAllowed, verifyPassword, signToken, seedUsers, seedCashier, findClientByLogin } = require('./auth');
 const { LOCATIONS } = require('./lib/excel-config');
 const { registerReportRoutes } = require('./lib/report-routes');
 const { saveEmailSettings, getEmailSettingsPublic, seedEmailDefaults } = require('./lib/settings');
@@ -66,7 +66,10 @@ app.post('/api/auth/login', (req, res) => {
   if (!user || !verifyPassword(String(password || ''), user.password_hash)) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
-  res.json({ token: signToken(user), user: { id: user.id, name: user.name, role: user.role, client_id: user.client_id } });
+  res.json({
+    token: signToken(user),
+    user: { id: user.id, name: user.name, role: user.role, client_id: user.client_id, office: user.office || null },
+  });
 });
 
 app.post('/api/auth/client-login', (req, res) => {
@@ -113,6 +116,10 @@ app.post('/api/auth/client-login', (req, res) => {
 
 app.get('/api/auth/me', authRequired, (req, res) => {
   const base = { id: req.user.id, name: req.user.name, role: req.user.role, client_id: req.user.client_id };
+  if (req.user.role === 'cashier') {
+    const u = db.prepare('SELECT office FROM users WHERE id = ?').get(req.user.id);
+    return res.json({ ...base, office: (u && u.office) || 'Harare' });
+  }
   if (req.user.role === 'client' && req.user.client_id) {
     const c = db.prepare('SELECT location, stand_no FROM clients WHERE id = ?').get(req.user.client_id);
     if (c) return res.json({ ...base, location: c.location, stand_no: c.stand_no });
@@ -121,6 +128,7 @@ app.get('/api/auth/me', authRequired, (req, res) => {
 });
 
 app.use('/api', require('./routes/clients'));
+app.use('/api', require('./routes/bursary'));
 app.use('/api', require('./routes/dashboard'));
 app.use('/api', require('./routes/notify'));
 app.use('/api', require('./routes/import'));
@@ -196,6 +204,7 @@ app.use((err, req, res, next) => {
 });
 
 seedUsers();
+seedCashier();
 seedEmailDefaults();
 
 const PORT = process.env.PORT || 4040;

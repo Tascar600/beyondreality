@@ -15,13 +15,18 @@ export default function Layout() {
         { to: '/my', label: 'My Stand' },
         { to: `/clients/${user.client_id}`, label: 'My Record' },
       ]
-    : [
-        { to: '/dashboard', label: 'Dashboard' },
-        { to: '/clients', label: 'Clients' },
-        { to: '/payments', label: 'Monthly Payments' },
-        { to: '/import', label: 'Excel Import' },
-        { to: '/reports', label: 'Reports' },
-      ];
+    : user.role === 'cashier'
+      ? [
+          { to: '/bursary', label: 'Cash Office (Bursary)' },
+        ]
+      : [
+          { to: '/dashboard', label: 'Dashboard' },
+          { to: '/clients', label: 'Clients' },
+          { to: '/payments', label: 'Monthly Payments' },
+          { to: '/import', label: 'Excel Import' },
+          { to: '/reports', label: 'Reports' },
+          { to: '/bursary', label: 'Cash Office (Bursary)' },
+        ];
 
   return (
     <div className="layout">
@@ -31,7 +36,7 @@ export default function Layout() {
           <div className="brand-sub">Housing Portal</div>
         </div>
 
-        {user.role !== 'client' && (
+        {user.role !== 'client' && user.role !== 'cashier' && (
           <div className="location-picker">
             <label>Location</label>
             <select value={location} onChange={(e) => setLocation(e.target.value)}>
@@ -57,7 +62,7 @@ export default function Layout() {
         <div className="sidebar-foot">
           <div className="user-chip">
             <strong>{user.name}</strong>
-            <span>{user.role === 'client' ? `${user.location || ''} · Stand ${user.stand_no || ''}` : user.role}</span>
+            <span>{user.role === 'client' ? `${user.location || ''} · Stand ${user.stand_no || ''}` : user.role === 'cashier' ? `Cashier · ${user.office || 'Harare'}` : user.role}</span>
           </div>
           <button className="btn btn-ghost btn-block" onClick={() => { logout(); nav('/login'); }}>
             Sign out

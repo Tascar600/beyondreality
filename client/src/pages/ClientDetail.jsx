@@ -227,7 +227,7 @@ export default function ClientDetail() {
         <table className="table">
           <thead>
             <tr>
-              <th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th>
+              <th>Period</th><th className="num">Amount</th><th>Receipt No</th><th>Cash Reco No</th><th>Office</th>
               <th className="num">Running Balance</th><th>Date Paid</th>{canEdit && <th></th>}
             </tr>
           </thead>
@@ -235,7 +235,7 @@ export default function ClientDetail() {
             <tr className="bd-row">
               <td>Balance brought down</td>
               <td className="num">{money(c.balance_brought_down)}</td>
-              <td>—</td><td>—</td>
+              <td>—</td><td>—</td><td>—</td>
               <td className="num">{money(c.balance_brought_down)}</td>
               <td>{c.last_date_paid ? niceDate(c.last_date_paid) : '—'}</td>
               {canEdit && <td></td>}
@@ -246,6 +246,7 @@ export default function ClientDetail() {
                 <td className="num">{money(p.amount)}</td>
                 <td>{p.receipt_no || '—'}</td>
                 <td>{p.cash_reco_no || '—'}</td>
+                <td>{p.office || '—'}</td>
                 <td className="num">{money(p.running)}</td>
                 <td>{niceDate(p.payment_date)}</td>
                 {canEdit && <td><button className="btn btn-danger btn-sm" onClick={() => delPayment(p.id)}>✕</button></td>}
@@ -254,7 +255,7 @@ export default function ClientDetail() {
             <tr className="total-row">
               <td>Total paid (incl B/D)</td>
               <td className="num">{money(c.totalPaid)}</td>
-              <td colSpan="4"></td>
+              <td colSpan="5"></td>
               {canEdit && <td></td>}
             </tr>
           </tbody>
